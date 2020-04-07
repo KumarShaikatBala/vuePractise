@@ -2128,12 +2128,16 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      editMode: false,
       // Create a new form instance
       users: {},
       form: new Form({
+        id: '',
         name: '',
         email: '',
         bio: '',
@@ -2147,21 +2151,41 @@ __webpack_require__.r(__webpack_exports__);
     addModal: function addModal() {
       $('#add').modal('show');
       this.form.reset();
+      this.editMode = false;
     },
     editUser: function editUser(user) {
       $('#add').modal('show');
+      this.form.reset;
       this.form.fill(user);
+      this.editMode = true;
+    },
+    updateUser: function updateUser() {
+      var _this = this;
+
+      this.$Progress.start();
+      this.form.put('api/user/' + this.form.id).then(function () {
+        Fire.$emit('afterCreate');
+        $('#add').modal('hide');
+        Toast.fire({
+          icon: 'success',
+          title: 'Updated successfully'
+        });
+
+        _this.$Progress.finish();
+      })["catch"](function () {
+        _this.$Progress.fail();
+      });
     },
     loadUsers: function loadUsers() {
-      var _this = this;
+      var _this2 = this;
 
       axios.get('api/user').then(function (_ref) {
         var data = _ref.data;
-        return _this.users = data.data;
+        return _this2.users = data.data;
       });
     },
     createUser: function createUser() {
-      var _this2 = this;
+      var _this3 = this;
 
       this.$Progress.start();
       this.form.post('api/user').then(function () {
@@ -2174,11 +2198,13 @@ __webpack_require__.r(__webpack_exports__);
           title: 'Signed in successfully'
         });
 
-        _this2.$Progress.finish();
-      })["catch"](function () {});
+        _this3.$Progress.finish();
+      })["catch"](function () {
+        _this3.$Progress.fail();
+      });
     },
     deleteUser: function deleteUser(id) {
-      var _this3 = this;
+      var _this4 = this;
 
       Swal.fire({
         title: 'Are you sure?',
@@ -2190,7 +2216,7 @@ __webpack_require__.r(__webpack_exports__);
         confirmButtonText: 'Yes, delete it!'
       }).then(function (result) {
         if (result.value) {
-          _this3.form["delete"]('api/user/' + id).then(function () {
+          _this4.form["delete"]('api/user/' + id).then(function () {
             Swal.fire('Deleted!', 'Your file has been deleted.', 'success');
             Fire.$emit('afterCreate');
           })["catch"](function () {});
@@ -2202,13 +2228,13 @@ __webpack_require__.r(__webpack_exports__);
   /*        created() {
           },*/
   mounted: function mounted() {
-    var _this4 = this;
+    var _this5 = this;
 
     this.loadUsers();
     /*setInterval( ()=>this.loadUsers(),3000);*/
 
     Fire.$on('afterCreate', function () {
-      _this4.loadUsers();
+      _this5.loadUsers();
     });
   }
 });
@@ -59463,7 +59489,42 @@ var render = function() {
                   },
                   [
                     _c("div", { staticClass: "modal-content" }, [
-                      _vm._m(0),
+                      _c("div", { staticClass: "modal-header" }, [
+                        _c(
+                          "h5",
+                          {
+                            directives: [
+                              {
+                                name: "show",
+                                rawName: "v-show",
+                                value: !_vm.editMode,
+                                expression: "!editMode"
+                              }
+                            ],
+                            staticClass: "modal-title",
+                            attrs: { id: "exampleModalLabel" }
+                          },
+                          [_vm._v("Add New")]
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "h5",
+                          {
+                            directives: [
+                              {
+                                name: "show",
+                                rawName: "v-show",
+                                value: _vm.editMode,
+                                expression: "editMode"
+                              }
+                            ],
+                            staticClass: "modal-title"
+                          },
+                          [_vm._v("Edit")]
+                        ),
+                        _vm._v(" "),
+                        _vm._m(0)
+                      ]),
                       _vm._v(" "),
                       _c(
                         "form",
@@ -59471,10 +59532,7 @@ var render = function() {
                           on: {
                             submit: function($event) {
                               $event.preventDefault()
-                              return _vm.createUser($event)
-                            },
-                            keydown: function($event) {
-                              return _vm.form.onKeydown($event)
+                              _vm.editMode ? _vm.updateUser() : _vm.createUser()
                             }
                           }
                         },
@@ -59740,11 +59798,33 @@ var render = function() {
                             _c(
                               "button",
                               {
+                                directives: [
+                                  {
+                                    name: "show",
+                                    rawName: "v-show",
+                                    value: _vm.editMode,
+                                    expression: "editMode"
+                                  }
+                                ],
+                                staticClass: "btn btn-danger",
+                                attrs: { type: "submit" }
+                              },
+                              [_vm._v("Update")]
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "button",
+                              {
+                                directives: [
+                                  {
+                                    name: "show",
+                                    rawName: "v-show",
+                                    value: !_vm.editMode,
+                                    expression: "!editMode"
+                                  }
+                                ],
                                 staticClass: "btn btn-primary",
-                                attrs: {
-                                  disabled: _vm.form.busy,
-                                  type: "submit"
-                                }
+                                attrs: { type: "submit" }
                               },
                               [_vm._v("Create")]
                             )
@@ -59819,26 +59899,18 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "modal-header" }, [
-      _c(
-        "h5",
-        { staticClass: "modal-title", attrs: { id: "exampleModalLabel" } },
-        [_vm._v("Add New")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "close",
-          attrs: {
-            type: "button",
-            "data-dismiss": "modal",
-            "aria-label": "Close"
-          }
-        },
-        [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
-      )
-    ])
+    return _c(
+      "button",
+      {
+        staticClass: "close",
+        attrs: {
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
+        }
+      },
+      [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
+    )
   },
   function() {
     var _vm = this
@@ -75398,8 +75470,8 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! H:\xampp\htdocs\vueNew\resources\js\app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! H:\xampp\htdocs\vueNew\resources\sass\app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! H:\xampp\htdocs\vuePractise\resources\js\app.js */"./resources/js/app.js");
+module.exports = __webpack_require__(/*! H:\xampp\htdocs\vuePractise\resources\sass\app.scss */"./resources/sass/app.scss");
 
 
 /***/ })

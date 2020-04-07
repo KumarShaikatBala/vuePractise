@@ -13,12 +13,13 @@
                                 <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="exampleModalLabel">Add New</h5>
+                                            <h5 v-show="!editMode" class="modal-title" id="exampleModalLabel">Add New</h5>
+                                            <h5 v-show="editMode" class="modal-title" >Edit</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
-                                        <form @submit.prevent="createUser" @keydown="form.onKeydown($event)">
+                                        <form @submit.prevent="editMode? updateUser() : createUser()" >
                                         <div class="modal-body">
 
                                                 <div class="form-group">
@@ -58,7 +59,8 @@
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                                            <button :disabled="form.busy" type="submit" class="btn btn-primary">Create</button>
+                                            <button v-show="editMode"  type="submit" class="btn btn-danger">Update</button>
+                                            <button v-show="!editMode" type="submit" class="btn btn-primary">Create</button>
                                         </div>
                                         </form>
                                     </div>
@@ -106,9 +108,12 @@
     export default {
         data () {
             return {
+                editMode:false,
+
                 // Create a new form instance
                 users:{},
                 form: new Form({
+                    id: '',
                     name: '',
                     email: '',
                     bio: '',
@@ -122,12 +127,34 @@
             addModal(){
                 $('#add').modal('show');
                 this.form.reset();
+                this.editMode=false;
+
             },
             editUser(user){
                 $('#add').modal('show');
+                this.form.reset;
                 this.form.fill(user);
+                this.editMode=true;
             },
+            updateUser(){
+                this.$Progress.start();
 
+                this.form.put('api/user/'+this.form.id).then(()=>{
+                    Fire.$emit('afterCreate');
+
+                    $('#add').modal('hide');
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Updated successfully'
+                    });
+
+                    this.$Progress.finish();
+                })
+                .catch(()=>{
+                    this.$Progress.fail();
+                })
+            },
 
             loadUsers(){
                 axios.get('api/user').then(({data})=>(this.users=data.data));
@@ -151,7 +178,7 @@
 
                   this.$Progress.finish();
               })
-.catch(()=>{});
+.catch(()=>{   this.$Progress.fail();});
 
           },
             deleteUser(id){
